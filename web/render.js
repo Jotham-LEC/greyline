@@ -1,6 +1,6 @@
 // Tick-time drawing: the day/night terminator overlay + the city clocks.
 // Ports render.py:_overlay_night, _place_labels, and the clock-drawing loop.
-import { subsolarPoint, boundaryLat, nightIsSouth } from "./sun.js";
+import { subsolarPoint, darkLatBounds } from "./sun.js";
 import { rgb, rgba, labelLines } from "./config.js";
 
 const TWILIGHT = [0.0, -6.0, -12.0, -18.0];
@@ -12,16 +12,39 @@ function polyPath(ctx, pts) {
   ctx.closePath();
 }
 
-function terminatorPolygon(elev, sublat, sublon, proj, w, h, daySide = false, step = 3) {
-  const pts = [];
+function darkRibbon(elev, sublat, sublon, proj, w, h, step = 3) {
+  // One ring per contiguous run of columns where the level is reached: the top
+  // edge follows the shallower crossing, the bottom the deeper one, so a band
+  // that pinches off where the level is never touched simply comes to an end
+  // (port of render.py:_dark_ribbon).
+  const colInfo = [];
   for (let x = 0; x <= w; x += step) {
-    const lat = boundaryLat(proj.xToLon(x), sublat, sublon, elev);
-    pts.push([x, Math.max(0, Math.min(h, proj.latToY(lat)))]);
+    const lat = darkLatBounds(proj.xToLon(x), sublat, sublon, elev);
+    if (lat.length === 0) { colInfo.push(null); continue; }
+    if (lat[0] === -91) { colInfo.push([0, h]); continue; }
+    const lo = lat[0], hi = lat[1];
+    colInfo.push([
+      Math.max(0, Math.min(h, proj.latToY(hi))),
+      Math.max(0, Math.min(h, proj.latToY(lo))),
+    ]);
   }
-  const closeBottom = nightIsSouth(sublat) !== daySide;
-  if (closeBottom) pts.push([w, h], [0, h]);
-  else pts.push([w, 0], [0, 0]);
-  return pts;
+  const rings = [];
+  const run = [];
+  const flush = () => {
+    if (run.length >= 2) {
+      const ring = run.map(([x, [top, _]]) => [x, top]);
+      for (let i = run.length - 1; i >= 0; i--) { const [x, [_, bottom]] = run[i]; ring.push([x, bottom]); }
+      rings.push(ring);
+    }
+    run.length = 0;
+  };
+  for (let i = 0; i < colInfo.length; i++) {
+    const col = colInfo[i];
+    if (col === null) flush();
+    else run.push([i * step, col]);
+  }
+  flush();
+  return rings;
 }
 
 export function overlayNight(ctx, date, theme, bands, alpha, proj, w, h) {
@@ -31,16 +54,26 @@ export function overlayNight(ctx, date, theme, bands, alpha, proj, w, h) {
   const dw = theme.day_wash;
   if (dw) {
     const a = dw.length > 3 ? dw[3] : 255;
+    const tint = rgb([Math.round(dw[0] * a / 255), Math.round(dw[1] * a / 255), Math.round(dw[2] * a / 255)]);
+    // Day side = complement of the dark ribbons: wash a scratch layer, punch the
+    // dark columns back to black (screen's no-op), then composite it once.
+    const layer = document.createElement("canvas");
+    layer.width = w; layer.height = h;
+    const lc = layer.getContext("2d");
+    lc.fillStyle = tint; lc.fillRect(0, 0, w, h);
+    lc.fillStyle = "#000";
+    for (const e of elevations)
+      for (const ring of darkRibbon(e, sublat, sublon, proj, w, h)) { polyPath(lc, ring); lc.fill(); }
     ctx.globalCompositeOperation = "screen";
-    ctx.fillStyle = rgb([Math.round(dw[0] * a / 255), Math.round(dw[1] * a / 255), Math.round(dw[2] * a / 255)]);
-    for (const e of elevations) { polyPath(ctx, terminatorPolygon(e, sublat, sublon, proj, w, h, true)); ctx.fill(); }
+    ctx.drawImage(layer, 0, 0);
   }
   const night = theme.night;
   if (alpha > 0 && night) {
     const t = alpha / 255;
     ctx.globalCompositeOperation = "multiply";
     ctx.fillStyle = rgb(night.map((c) => Math.round(255 - (255 - c) * t)));
-    for (const e of elevations) { polyPath(ctx, terminatorPolygon(e, sublat, sublon, proj, w, h, false)); ctx.fill(); }
+    for (const e of elevations)
+      for (const ring of darkRibbon(e, sublat, sublon, proj, w, h)) { polyPath(ctx, ring); ctx.fill(); }
   }
   ctx.globalCompositeOperation = "source-over";
 }

@@ -6,6 +6,22 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+### Fixed
+- **The southern night band fanned to the pole instead of closing into a twilight
+  oval.** The terminator itself was right, but the twilight bands were drawn from a
+  single boundary latitude per column, found by solving for the first crossing of
+  each level. Along a meridian the sun sinks toward the midnight point and then
+  rises again, so a level like −18° is crossed *twice* — once on the way down and
+  once on the way back up. Keeping only the shallow root painted everything
+  poleward of it in the deepest shade: in an equinoctial spring evening the
+  astronomical band spilled out of its oval around the midnight point and
+  swallowed the nautical and civil bands all the way to the Antarctic winter line
+  (clearest right now at the −3 timezone column in Brazil). The bands are now
+  exact ribbons: each column contributes the two crossing latitudes as its top and
+  bottom edges, and where a level is never reached the band simply pinches off.
+  `sun.dark_lat_bounds` returns the exact dark interval, `render._dark_ribbon`
+  draws it, and the browser demo's `sun.js`/`render.js` keep the parity.
+
 ## [0.8.5] — 2026-09-03
 
 Both of these came out of auditing the code the previous five releases added, rather

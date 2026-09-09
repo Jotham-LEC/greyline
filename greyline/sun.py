@@ -85,6 +85,70 @@ def boundary_lat(lon: float, sublat: float, sublon: float, elevation: float = 0.
     return max(-90.0, min(90.0, lat))
 
 
+def dark_lat_bounds(
+    lon: float, sublat: float, sublon: float, elevation: float = 0.0
+) -> tuple[float, ...]:
+    """Latitudes (deg) on this meridian where solar elevation < `elevation`.
+
+    Along a meridian, sin(elevation) is a single-humped sinusoid,
+    a*sin(lat) + b*cos(lat) with a = sin(dec), b = cos(dec)*cos(lon - sublon),
+    so a horizon level is crossed by a column at UP TO TWO latitudes: once on the
+    way down toward the midnight point and once on the way back up toward the
+    pole.  ``boundary_lat`` keeps only the shallow root, which over-shades
+    everything poleward of it (e.g. in southern spring the deepest twilight band
+    fanned out from Brazil all the way to the south pole, cutting through the
+    nautical and astronomical bands).  This returns the exact dark interval.
+
+    Returns an empty tuple when the level is never reached on that meridian,
+    ``(-91.0,)`` when the whole meridian is darker than it (a sentinel latitude
+    that translates to "the full column"), or ``(lo, hi)`` with lo <= hi, the
+    latitudes between which the elevation stays below the level (a zero-width
+    interval marks a tangent that pinches the band off).
+    """
+    dec = math.radians(sublat)
+    h = math.radians(lon - sublon)
+    a = math.sin(dec)
+    b = math.cos(dec) * math.cos(h)
+    r = math.hypot(a, b)
+    sin_elev = math.sin(math.radians(elevation))
+    if r < 1e-9:
+        return (-91.0,) if sin_elev > 0 else ()
+
+    # Meridian extrema: the endpoints, plus the interior extremum latitudes when
+    # they fall on the meridian (atan2(a, b) is the max, atan2(-a, -b) the min).
+    cands = [(-90.0, -a), (90.0, a)]
+    for t in (math.degrees(math.atan2(a, b)), math.degrees(math.atan2(-a, -b))):
+        if -90.0 <= t <= 90.0:
+            rad = math.radians(t)
+            cands.append((t, a * math.sin(rad) + b * math.cos(rad)))
+    th_min, emin = min(cands, key=lambda p: p[1])
+    emax = max(e for _, e in cands)
+    if sin_elev <= emin:
+        return ()
+    if sin_elev >= emax:
+        return (-91.0,)
+
+    # Two crossings.  sin(lat + phi) = sin_elev/r with phi = atan2(b, a); in
+    # latitude space the roots sit at asin(c) - phi and pi - asin(c) - phi,
+    # wrapped back onto the meridian.
+    phi = math.atan2(b, a)
+    alpha = math.asin(max(-1.0, min(1.0, sin_elev / r)))
+    crossings = []
+    for u in (alpha, math.pi - alpha):
+        for k in (-1, 0, 1):
+            th = math.degrees(u + 2.0 * math.pi * k - phi)
+            if -90.0 <= th <= 90.0 and all(abs(th - x) > 1e-6 for x in crossings):
+                crossings.append(th)
+    crossings.sort()
+    if len(crossings) == 2:
+        return (crossings[0], crossings[1])
+    if len(crossings) == 1:
+        t = crossings[0]
+        # The dark side is the segment toward the meridian's minimum.
+        return (t, 90.0) if th_min > t else (-90.0, t)
+    return ()
+
+
 def terminator_lat(lon: float, sublat: float, sublon: float) -> float:
     """Day/night terminator latitude (solar elevation 0) at the given longitude."""
     return boundary_lat(lon, sublat, sublon, 0.0)

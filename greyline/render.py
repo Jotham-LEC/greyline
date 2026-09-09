@@ -203,17 +203,50 @@ def _vector_base(out_w, out_h, theme, font, proj, home_offset, font_desc):
     return base
 
 
-def _terminator_polygon(elevation, sublat, sublon, proj, w, h, step=3, day_side=False):
-    """Polygon (output px) for the region darker than `elevation` (or the lit side)."""
-    pts = []
+def _dark_ribbon(elevation, sublat, sublon, proj, w, h, step=3):
+    """Polygon ring(s) (output px) for the region where solar elevation < `elevation`.
+
+    On a meridian the dark region is an interval of latitudes: the elevation sinks
+    toward the midnight point and rises again toward the pole, so a horizon level
+    is crossed twice (best seen in the south-right now: the deepest band is an
+    oval around the midnight point, not a wedge fanning to the south pole).  Each
+    column therefore contributes a top edge (the shallower crossing) and a bottom
+    edge (the deeper one), and the band is drawn as a ribbon bounded by the two
+    polylines.  Columns where the level is never reached are skipped, so a band
+    that pinches off degrades to nothing instead of over-staining.
+    """
+    columns = []
     x = 0
     while x <= w:
-        lat = sun.boundary_lat(proj.x_to_lon(x), sublat, sublon, elevation)
-        pts.append((x, max(0.0, min(float(h), proj.lat_to_y(lat)))))
+        lat = sun.dark_lat_bounds(proj.x_to_lon(x), sublat, sublon, elevation)
+        if not lat:
+            columns.append(None)
+        elif lat[0] == -91.0:  # whole column darker than the level
+            columns.append((0.0, float(h)))
+        else:
+            lo, hi = lat
+            top = max(0.0, min(float(h), proj.lat_to_y(hi)))
+            bottom = max(0.0, min(float(h), proj.lat_to_y(lo)))
+            columns.append((top, bottom))
         x += step
-    close_bottom = sun.night_is_south(sublat) != day_side
-    pts += [(w, h), (0, h)] if close_bottom else [(w, 0), (0, 0)]
-    return pts
+
+    rings = []
+    run = []
+    for i, col in enumerate(columns):
+        if col is None:
+            if len(run) >= 2:
+                rings.append(
+                    [(x, top) for x, (top, _) in run]
+                    + [(x, bot) for x, (_, bot) in reversed(run)]
+                )
+            run = []
+        else:
+            run.append((i * step, col))
+    if len(run) >= 2:
+        rings.append(
+            [(x, top) for x, (top, _) in run] + [(x, bot) for x, (_, bot) in reversed(run)]
+        )
+    return rings
 
 
 def _blend_region(base, layer_rgb, op):
@@ -236,33 +269,44 @@ def _overlay_night(base, dt, theme, bands, alpha, proj):
       - day-side LIGHT washes (SCREEN toward the sun) — brighten the lit hemisphere;
       - night-side DARK washes (MULTIPLY toward midnight) — deepen the dark hemisphere.
     The civil/nautical/astronomical elevations are stacked, so each twilight band is a
-    distinct step.
+    distinct step.  Each band is exactly the region where the solar elevation is below
+    its level — `_dark_ribbon` handles the two crossings a meridian can have, so the
+    deepest band forms an oval around the midnight point instead of fanning out to a
+    pole.
     """
     w, h = base.size
     sublat, sublon = sun.subsolar_point(dt)
     elevations = TWILIGHT_ELEVATIONS if bands else (0.0,)
 
-    def stack(day_side, base_color, tint, op):
+    def stack_dark(tint, base_color, op):
+        """Blend `tint` with `op` everywhere the level says it is darker."""
         nonlocal base
         for elev in elevations:
             layer = Image.new("RGB", (w, h), base_color)
-            ImageDraw.Draw(layer).polygon(
-                _terminator_polygon(elev, sublat, sublon, proj, w, h, day_side=day_side),
-                fill=tint,
-            )
+            draw = ImageDraw.Draw(layer)
+            for ring in _dark_ribbon(elev, sublat, sublon, proj, w, h):
+                draw.polygon(ring, fill=tint)
             base = _blend_region(base, layer, op)
 
     dw = theme.get("day_wash")
     if dw:
         a = dw[3] if len(dw) > 3 else 255
         tint = tuple(round(c * a / 255) for c in dw[:3])
-        stack(day_side=True, base_color=(0, 0, 0), tint=tint, op=ImageChops.screen)
+        # The day side is the complement of the dark ribbon(s): paint the whole
+        # canvas with the wash, then punch the dark columns back to black (screen's
+        # no-op) so only the lit region is brightened.
+        for elev in elevations:
+            layer = Image.new("RGB", (w, h), tint)
+            draw = ImageDraw.Draw(layer)
+            for ring in _dark_ribbon(elev, sublat, sublon, proj, w, h):
+                draw.polygon(ring, fill=(0, 0, 0))
+            base = _blend_region(base, layer, ImageChops.screen)
 
     night = theme.get("night")
     if alpha > 0 and night:
         t = alpha / 255.0
         tint = tuple(round(255 - (255 - c) * t) for c in night)
-        stack(day_side=False, base_color=(255, 255, 255), tint=tint, op=ImageChops.multiply)
+        stack_dark(tint, (255, 255, 255), ImageChops.multiply)
     return base
 
 

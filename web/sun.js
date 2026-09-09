@@ -33,3 +33,50 @@ export function boundaryLat(lon, sublat, sublon, elevation = 0) {
 }
 
 export const nightIsSouth = (sublat) => sublat > 0;
+
+export function darkLatBounds(lon, sublat, sublon, elevation = 0) {
+  // Latitudes (deg) on this meridian where the solar elevation is below `elevation`
+  // — port of sun.py:dark_lat_bounds.  Along a meridian the elevation is a single-
+  // humped sinusoid, so a level is crossed at UP TO TWO latitudes (once down
+  // toward the midnight point, once back up toward the pole); boundaryLat only
+  // keeps the shallow root, which over-shades everything poleward of it.  Returns
+  // [] when the level is never reached, [-91] when the whole meridian is darker
+  // than it, or [lo, hi] with lo <= hi (a zero-width interval is a tangent).
+  const dec = sublat * D2R, h = (lon - sublon) * D2R;
+  const a = Math.sin(dec), b = Math.cos(dec) * Math.cos(h);
+  const r = Math.hypot(a, b);
+  const sinL = Math.sin(elevation * D2R);
+  if (r < 1e-9) return sinL > 0 ? [-91] : [];
+
+  let cands = [[-90, -a], [90, a]];  // e(-90) = -a, e(90) = +a
+  for (const t of [Math.atan2(a, b) * R2D, Math.atan2(-a, -b) * R2D]) {
+    if (t >= -90 && t <= 90) {
+      const rad = t * D2R;
+      cands.push([t, a * Math.sin(rad) + b * Math.cos(rad)]);
+    }
+  }
+  let thMin = cands[0][0], emin = cands[0][1], emax = cands[0][1];
+  for (const [th, e] of cands) {
+    if (e < emin) { emin = e; thMin = th; }
+    if (e > emax) emax = e;
+  }
+  if (sinL <= emin) return [];
+  if (sinL >= emax) return [-91];
+
+  const phi = Math.atan2(b, a);
+  const alpha = Math.asin(Math.max(-1, Math.min(1, sinL / r)));
+  const crossings = [];
+  for (const u of [alpha, Math.PI - alpha]) {
+    for (const k of [-1, 0, 1]) {
+      const th = (u + 2 * Math.PI * k - phi) * R2D;
+      if (th >= -90 && th <= 90 && !crossings.some((x) => Math.abs(th - x) < 1e-6)) crossings.push(th);
+    }
+  }
+  crossings.sort((p, q) => p - q);
+  if (crossings.length === 2) return [crossings[0], crossings[1]];
+  if (crossings.length === 1) {
+    const t = crossings[0];
+    return thMin > t ? [t, 90] : [-90, t];
+  }
+  return [];
+}

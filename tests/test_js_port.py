@@ -110,6 +110,28 @@ def test_night_hemisphere_agrees():
     assert got == [sun.night_is_south(10), sun.night_is_south(-10), sun.night_is_south(0)]
 
 
+def test_dark_lat_bounds_matches_python_across_the_globe():
+    """Every twilight level at every 20° of longitude — the two-crossing bands."""
+    lons = list(range(-180, 181, 20))
+    elevations = [0.0, -6.0, -12.0, -18.0]
+    got = _node(f"""
+        const {{ subsolarPoint, darkLatBounds }} = await import(W + '/sun.js');
+        const [lat, lon] = subsolarPoint(new Date(Date.UTC(2024, 5, 20, 9, 30)));
+        const out = [];
+        for (const e of {json.dumps(elevations)})
+          for (const g of {json.dumps(lons)}) out.push(darkLatBounds(g, lat, lon, e));
+        console.log(JSON.stringify(out));
+    """)
+    sublat, sublon = sun.subsolar_point(datetime(2024, 6, 20, 9, 30, tzinfo=UTC))
+    expected = [
+        sun.dark_lat_bounds(lon, sublat, sublon, e) for e in elevations for lon in lons
+    ]
+    for js, py in zip(got, expected, strict=True):
+        assert len(js) == len(py)
+        for j, p in zip(js, py, strict=True):
+            assert j == pytest.approx(p, abs=1e-9), "dark_lat_bounds port drift"
+
+
 def test_projection_matches_python():
     """geo.js ports both geo.py's constants and render.py's vector projection."""
     size = (1600, 900)
