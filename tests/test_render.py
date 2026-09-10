@@ -1,5 +1,6 @@
 """End-to-end smoke: both map styles produce an RGB image of the requested size."""
 
+import math
 import os
 from datetime import UTC, datetime
 
@@ -125,3 +126,66 @@ def test_recolor_dark_matches_a_per_pixel_reference():
     got = render._recolor_dark(src, light)
     assert got.mode == "RGBA"
     assert got.tobytes() == expected.tobytes()
+
+
+@pytest.mark.parametrize(
+    "when",
+    [
+        datetime(2024, 6, 20, 9, 30, tzinfo=UTC),  # june solstice
+        datetime(2024, 12, 21, 18, 0, tzinfo=UTC),  # december solstice
+        datetime(2026, 3, 20, 12, 0, tzinfo=UTC),  # march equinox
+        datetime(2026, 9, 9, 7, 44, tzinfo=UTC),  # the instant from #17
+    ],
+)
+def test_twilight_bands_shade_exactly_the_dark_pixels(when):
+    """Every pixel carries as many twilight steps as its true solar elevation earns.
+
+    The #17 bug was only ever visible as pixels: solving for a single boundary
+    latitude answered the question it was asked, and the shading still came out wrong,
+    because one latitude is not enough to say which side of it is dark. So this checks
+    the composite, not the solver — against an elevation computed from first principles.
+
+    A night tint of mid-grey at full darkness halves the base once per band, so the
+    step count is readable straight off the pixel: 255, 128, 64, 32, 16.
+    """
+    from PIL import Image
+
+    from greyline import sun
+
+    w, h = 720, 405
+    proj = render._vector_projection(w, h)
+    steps = [255, 128, 64, 32, 16]
+    base = Image.new("RGBA", (w, h), (255, 255, 255, 255))
+    out = render._overlay_night(base, when, {"night": (128, 128, 128)}, True, 255, proj)
+    px = out.convert("L").load()
+
+    sublat, sublon = sun.subsolar_point(when)
+    d = math.radians(sublat)
+    checked = 0
+    for lat in [-88 + i * 2 for i in range(89)]:
+        a = math.radians(lat)
+        for lon in [-179 + j * 2 for j in range(180)]:
+            elev = math.degrees(
+                math.asin(
+                    max(
+                        -1.0,
+                        min(
+                            1.0,
+                            math.sin(a) * math.sin(d)
+                            + math.cos(a) * math.cos(d) * math.cos(math.radians(lon - sublon)),
+                        ),
+                    )
+                )
+            )
+            # Ribbon edges are sampled every few columns, so pixels sitting on a
+            # band boundary may legitimately land either side of it.
+            if min(abs(elev - level) for level in render.TWILIGHT_ELEVATIONS) < 1.5:
+                continue
+            x, y = proj.to_px(lon, lat)
+            if not (0 <= x < w and 0 <= y < h):
+                continue
+            want = sum(1 for level in render.TWILIGHT_ELEVATIONS if elev < level)
+            got = min(range(len(steps)), key=lambda i: abs(steps[i] - px[int(x), int(y)]))
+            assert got == want, f"{want} bands expected at lon {lon}, lat {lat} (elev {elev:.1f})"
+            checked += 1
+    assert checked > 5000, "the sample grid missed the map; this test would pass on anything"

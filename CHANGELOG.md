@@ -6,6 +6,29 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+### Fixed
+- **The deepest twilight band fanned out to a pole instead of closing into an oval.**
+  Reported in [#17] against the wallpaper and the browser demo alike, and worst near
+  the equinoxes: the astronomical band spilled out of its oval, swallowed the nautical
+  and civil bands on its way south and left the whole winter hemisphere painted in the
+  darkest shade. The terminator itself was always right. What was wrong is that each
+  band was drawn from a single boundary latitude per column, and one latitude is not
+  enough to say which side of it is dark: reading down a meridian the sun sinks toward
+  the midnight point and climbs again beyond it, so a level like −18° is crossed twice,
+  and taking only the first crossing shaded everything past it. Each band is now the
+  exact interval between both crossings, so it closes where the sun stops reaching that
+  level, and a band that never gets there is simply not drawn. Solving for the interval
+  costs no more than solving for the one latitude did, and the day and night washes now
+  share one solve instead of repeating it, so a tick does about half the terminator
+  geometry it used to.
+
+### Removed
+- **`sun.boundary_lat`, `sun.terminator_lat` and `sun.night_is_south`** (and their
+  `web/sun.js` counterparts). The single-boundary-latitude answer is what the twilight
+  bug above was made of, and nothing draws with it any more. `sun.dark_lat_bounds`
+  covers everything they were used for; at elevation 0 it returns the terminator as the
+  edge of the night interval. Only of interest if you import greyline as a library.
+
 ## [0.8.5] — 2026-09-03
 
 Both of these came out of auditing the code the previous five releases added, rather
@@ -210,6 +233,7 @@ than the code they were written to fix.
   `services.greyline.fontFamily` is deprecated rather than merely an alias.
 
 [#16]: https://github.com/cothink-ing/greyline/issues/16
+[#17]: https://github.com/cothink-ing/greyline/issues/17
 
 ## [0.7.3] — 2026-09-03
 

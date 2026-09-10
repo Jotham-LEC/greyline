@@ -2,7 +2,7 @@
 
 `web/sun.js`, `web/geo.js` and `web/config.js` are hand-written ports — "near-verbatim
 port of sun.py", says the header — of the subtlest code in the project: the NOAA
-declination series, the equation of time, the boundary-latitude solve, and the
+declination series, the equation of time, the twilight-band solve, and the
 projection. `web/themes.js` is protected from drift by a generator and a test. The
 maths had neither, so a fix landing in `sun.py` and not in `sun.js` was invisible.
 
@@ -16,7 +16,6 @@ machine that has no interest in the demo.
 """
 
 import json
-import math
 import os
 import shutil
 import subprocess
@@ -83,31 +82,41 @@ def test_subsolar_point_matches_python():
         assert js_lon == pytest.approx(py_lon, abs=1e-9), f"subsolar longitude at {y}-{m}-{d}"
 
 
-def test_boundary_lat_matches_python_across_the_globe():
-    """Every twilight elevation at every 15° of longitude — the terminator's shape."""
+def test_dark_lat_bounds_matches_python_across_the_globe():
+    """Every twilight level at every 15° of longitude, at all five pinned instants.
+
+    All five, not one, because the two-crossing geometry the bands are drawn from
+    is invisible at some of them: near the June solstice a single-root solve gives
+    the same answer as the correct one over most of the map, so a port checked only
+    there could drift for months before anything looked wrong.
+    """
     lons = list(range(-180, 181, 15))
     elevations = [0.0, -6.0, -12.0, -18.0]
     got = _node(f"""
-        const {{ subsolarPoint, boundaryLat }} = await import(W + '/sun.js');
-        const [lat, lon] = subsolarPoint(new Date(Date.UTC(2024, 5, 20, 9, 30)));
+        const {{ subsolarPoint, darkLatBounds }} = await import(W + '/sun.js');
         const out = [];
-        for (const e of {json.dumps(elevations)})
-          for (const g of {json.dumps(lons)}) out.push(boundaryLat(g, lat, lon, e));
+        for (const a of [{_utc_args()}]) {{
+          const [lat, lon] = subsolarPoint(new Date(Date.UTC(...a)));
+          for (const e of {json.dumps(elevations)})
+            for (const g of {json.dumps(lons)}) out.push(darkLatBounds(g, lat, lon, e));
+        }}
         console.log(JSON.stringify(out));
     """)
-    sublat, sublon = sun.subsolar_point(datetime(2024, 6, 20, 9, 30, tzinfo=UTC))
-    expected = [sun.boundary_lat(lon, sublat, sublon, e) for e in elevations for lon in lons]
+    expected = []
+    for y, m, d, h, mi in INSTANTS:
+        sublat, sublon = sun.subsolar_point(datetime(y, m, d, h, mi, tzinfo=UTC))
+        expected += [
+            sun.dark_lat_bounds(lon, sublat, sublon, e) for e in elevations for lon in lons
+        ]
     assert len(got) == len(expected)
+    assert any(band is not None for band in expected)  # the comparison is not vacuous
     for js, py in zip(got, expected, strict=True):
-        assert js == pytest.approx(py, abs=1e-9)
-
-
-def test_night_hemisphere_agrees():
-    got = _node("""
-        const { nightIsSouth } = await import(W + '/sun.js');
-        console.log(JSON.stringify([10, -10, 0].map(nightIsSouth)));
-    """)
-    assert got == [sun.night_is_south(10), sun.night_is_south(-10), sun.night_is_south(0)]
+        if py is None:
+            assert js is None, "sun.js reports a band where sun.py reports none"
+            continue
+        assert js is not None, "sun.js reports no band where sun.py reports one"
+        assert js[0] == pytest.approx(py[0], abs=1e-9), "dark_lat_bounds port drift"
+        assert js[1] == pytest.approx(py[1], abs=1e-9), "dark_lat_bounds port drift"
 
 
 def test_projection_matches_python():
@@ -181,4 +190,4 @@ def test_the_ported_modules_are_the_ones_under_test():
     """A guard against this file quietly testing nothing if web/ is restructured."""
     for name in ("sun.js", "geo.js", "config.js"):
         assert os.path.isfile(os.path.join(WEB, name)), name
-    assert math.isfinite(sun.boundary_lat(0.0, 23.4, 0.0, 0.0))
+    assert sun.dark_lat_bounds(0.0, 23.4, 0.0, 0.0) is not None

@@ -203,17 +203,41 @@ def _vector_base(out_w, out_h, theme, font, proj, home_offset, font_desc):
     return base
 
 
-def _terminator_polygon(elevation, sublat, sublon, proj, w, h, step=3, day_side=False):
-    """Polygon (output px) for the region darker than `elevation` (or the lit side)."""
-    pts = []
-    x = 0
-    while x <= w:
-        lat = sun.boundary_lat(proj.x_to_lon(x), sublat, sublon, elevation)
-        pts.append((x, max(0.0, min(float(h), proj.lat_to_y(lat)))))
-        x += step
-    close_bottom = sun.night_is_south(sublat) != day_side
-    pts += [(w, h), (0, h)] if close_bottom else [(w, 0), (0, 0)]
-    return pts
+def _dark_ribbons(elevation, sublat, sublon, proj, w, h, step=3):
+    """Polygon rings (output px) enclosing the region darker than `elevation`.
+
+    Each sampled column contributes the top and bottom edge of the dark band on
+    its meridian (`sun.dark_lat_bounds`); walking the top edges left to right and
+    the bottom edges back gives a closed ribbon. A column where the level is never
+    reached breaks the run, so a band that pinches off ends there rather than
+    fanning on to a pole -- which is how the deepest band comes out as an oval
+    around the midnight point instead of a wedge over the winter hemisphere.
+    """
+    rings: list[list[tuple[float, float]]] = []
+    run: list[tuple[float, float, float]] = []
+
+    def close_ring():
+        if len(run) >= 2:
+            rings.append(
+                [(x, top) for x, top, _ in run] + [(x, bottom) for x, _, bottom in reversed(run)]
+            )
+        run.clear()
+
+    for x in (*range(0, w, step), w):
+        band = sun.dark_lat_bounds(proj.x_to_lon(x), sublat, sublon, elevation)
+        if band is None:
+            close_ring()
+            continue
+        lo, hi = band
+        run.append(
+            (
+                float(x),
+                max(0.0, min(float(h), proj.lat_to_y(hi))),
+                max(0.0, min(float(h), proj.lat_to_y(lo))),
+            )
+        )
+    close_ring()
+    return rings
 
 
 def _blend_region(base, layer_rgb, op):
@@ -236,33 +260,39 @@ def _overlay_night(base, dt, theme, bands, alpha, proj):
       - day-side LIGHT washes (SCREEN toward the sun) — brighten the lit hemisphere;
       - night-side DARK washes (MULTIPLY toward midnight) — deepen the dark hemisphere.
     The civil/nautical/astronomical elevations are stacked, so each twilight band is a
-    distinct step.
+    distinct step, each one exactly the region below its level.
     """
     w, h = base.size
     sublat, sublon = sun.subsolar_point(dt)
     elevations = TWILIGHT_ELEVATIONS if bands else (0.0,)
+    # One geometry pass serves both washes: the lit region is the complement of the
+    # same rings, so solving them a second time would be the same work for the same
+    # answer, on every tick, on every output.
+    per_level = [_dark_ribbons(e, sublat, sublon, proj, w, h) for e in elevations]
 
-    def stack(day_side, base_color, tint, op):
+    def wash(background, tint, op):
+        """Blend one step per level: `background` is the op's no-op colour."""
         nonlocal base
-        for elev in elevations:
-            layer = Image.new("RGB", (w, h), base_color)
-            ImageDraw.Draw(layer).polygon(
-                _terminator_polygon(elev, sublat, sublon, proj, w, h, day_side=day_side),
-                fill=tint,
-            )
+        for rings in per_level:
+            layer = Image.new("RGB", (w, h), background)
+            draw = ImageDraw.Draw(layer)
+            for ring in rings:
+                draw.polygon(ring, fill=tint)
             base = _blend_region(base, layer, op)
 
     dw = theme.get("day_wash")
     if dw:
         a = dw[3] if len(dw) > 3 else 255
         tint = tuple(round(c * a / 255) for c in dw[:3])
-        stack(day_side=True, base_color=(0, 0, 0), tint=tint, op=ImageChops.screen)
+        # The lit region is whatever the rings do not cover, so wash the whole frame
+        # and punch the rings back to black, which is screen's no-op.
+        wash(tint, (0, 0, 0), ImageChops.screen)
 
     night = theme.get("night")
     if alpha > 0 and night:
         t = alpha / 255.0
         tint = tuple(round(255 - (255 - c) * t) for c in night)
-        stack(day_side=False, base_color=(255, 255, 255), tint=tint, op=ImageChops.multiply)
+        wash((255, 255, 255), tint, ImageChops.multiply)
     return base
 
 

@@ -1,6 +1,6 @@
 // Tick-time drawing: the day/night terminator overlay + the city clocks.
 // Ports render.py:_overlay_night, _place_labels, and the clock-drawing loop.
-import { subsolarPoint, boundaryLat, nightIsSouth } from "./sun.js";
+import { subsolarPoint, darkLatBounds } from "./sun.js";
 import { rgb, rgba, labelLines } from "./config.js";
 
 const TWILIGHT = [0.0, -6.0, -12.0, -18.0];
@@ -12,35 +12,63 @@ function polyPath(ctx, pts) {
   ctx.closePath();
 }
 
-function terminatorPolygon(elev, sublat, sublon, proj, w, h, daySide = false, step = 3) {
-  const pts = [];
-  for (let x = 0; x <= w; x += step) {
-    const lat = boundaryLat(proj.xToLon(x), sublat, sublon, elev);
-    pts.push([x, Math.max(0, Math.min(h, proj.latToY(lat)))]);
+function darkRibbons(elev, sublat, sublon, proj, w, h, step = 3) {
+  // One ring per contiguous run of columns that reach the level: the top edge follows
+  // the shallower crossing, the bottom the deeper one, so a band that pinches off
+  // ends there instead of fanning to a pole (port of render.py:_dark_ribbons).
+  const rings = [], run = [];
+  const closeRing = () => {
+    if (run.length >= 2) {
+      const ring = run.map(([x, top]) => [x, top]);
+      for (let i = run.length - 1; i >= 0; i--) ring.push([run[i][0], run[i][2]]);
+      rings.push(ring);
+    }
+    run.length = 0;
+  };
+  const xs = [];
+  for (let x = 0; x < w; x += step) xs.push(x);
+  xs.push(w);
+  for (const x of xs) {
+    const band = darkLatBounds(proj.xToLon(x), sublat, sublon, elev);
+    if (band === null) { closeRing(); continue; }
+    run.push([x, Math.max(0, Math.min(h, proj.latToY(band[1]))),
+                 Math.max(0, Math.min(h, proj.latToY(band[0])))]);
   }
-  const closeBottom = nightIsSouth(sublat) !== daySide;
-  if (closeBottom) pts.push([w, h], [0, h]);
-  else pts.push([w, 0], [0, 0]);
-  return pts;
+  closeRing();
+  return rings;
 }
 
 export function overlayNight(ctx, date, theme, bands, alpha, proj, w, h) {
   const [sublat, sublon] = subsolarPoint(date);
   const elevations = bands ? TWILIGHT : [0.0];
+  // One geometry pass serves both washes: the lit region is the complement of the
+  // same rings, so solving them twice would be the same work for the same answer.
+  const perLevel = elevations.map((e) => darkRibbons(e, sublat, sublon, proj, w, h));
 
   const dw = theme.day_wash;
   if (dw) {
     const a = dw.length > 3 ? dw[3] : 255;
+    const tint = rgb([Math.round(dw[0] * a / 255), Math.round(dw[1] * a / 255), Math.round(dw[2] * a / 255)]);
+    // The lit region is whatever the rings do not cover, so wash a scratch layer and
+    // punch the rings back to black, which is screen's no-op, then composite it once.
+    const layer = document.createElement("canvas");
+    layer.width = w; layer.height = h;
+    const lc = layer.getContext("2d");
     ctx.globalCompositeOperation = "screen";
-    ctx.fillStyle = rgb([Math.round(dw[0] * a / 255), Math.round(dw[1] * a / 255), Math.round(dw[2] * a / 255)]);
-    for (const e of elevations) { polyPath(ctx, terminatorPolygon(e, sublat, sublon, proj, w, h, true)); ctx.fill(); }
+    for (const rings of perLevel) {
+      lc.fillStyle = tint; lc.fillRect(0, 0, w, h);
+      lc.fillStyle = "#000";
+      for (const ring of rings) { polyPath(lc, ring); lc.fill(); }
+      ctx.drawImage(layer, 0, 0);
+    }
   }
   const night = theme.night;
   if (alpha > 0 && night) {
     const t = alpha / 255;
     ctx.globalCompositeOperation = "multiply";
     ctx.fillStyle = rgb(night.map((c) => Math.round(255 - (255 - c) * t)));
-    for (const e of elevations) { polyPath(ctx, terminatorPolygon(e, sublat, sublon, proj, w, h, false)); ctx.fill(); }
+    for (const rings of perLevel)
+      for (const ring of rings) { polyPath(ctx, ring); ctx.fill(); }
   }
   ctx.globalCompositeOperation = "source-over";
 }

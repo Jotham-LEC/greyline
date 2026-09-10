@@ -22,14 +22,29 @@ export function subsolarPoint(date) {
   return [sublat, sublon];
 }
 
-export function boundaryLat(lon, sublat, sublon, elevation = 0) {
-  const dec = sublat * D2R, h = (lon - sublon) * D2R, e = elevation * D2R;
+export function darkLatBounds(lon, sublat, sublon, elevation = 0) {
+  // The latitudes on this meridian where the sun is below `elevation`, as [lo, hi],
+  // or null where it never gets that dark — port of sun.py:dark_lat_bounds.  Down a
+  // meridian the elevation is a single-humped sinusoid, so a meridian that reaches a
+  // level reaches it TWICE (once sinking toward the midnight point, once climbing
+  // back out); solving for one root finds only the shallow crossing and leaves
+  // everything poleward of it looking dark.
+  const dec = sublat * D2R, h = (lon - sublon) * D2R;
   const a = Math.sin(dec), b = Math.cos(dec) * Math.cos(h);
   const r = Math.hypot(a, b);
-  if (r < 1e-9) return 0;
-  const arg = Math.max(-1, Math.min(1, Math.sin(e) / r));
-  const lat = (Math.asin(arg) - Math.atan2(b, a)) * R2D;
-  return Math.max(-90, Math.min(90, lat));
-}
+  const sinElev = Math.sin(elevation * D2R);
+  if (sinElev > r) return [-90, 90];   // never climbs to the level: dark all the way down
+  if (sinElev <= -r) return null;      // and never sinks to it: no band here at all
 
-export const nightIsSouth = (sublat) => sublat > 0;
+  // R*sin(u) < sin(elev) on (pi - asin(c), 2*pi + asin(c)), one interval per turn:
+  // shift it by whole turns until it meets this meridian, then clip it to the poles.
+  const phi = Math.atan2(b, a);
+  const alpha = Math.asin(Math.max(-1, Math.min(1, sinElev / r)));
+  const lo = (Math.PI - alpha - phi) * R2D;
+  const hi = (2 * Math.PI + alpha - phi) * R2D;
+  for (const turn of [-360, 0, 360]) {
+    const top = Math.max(-90, lo + turn), bottom = Math.min(90, hi + turn);
+    if (top <= bottom) return [top, bottom];
+  }
+  return null;
+}
