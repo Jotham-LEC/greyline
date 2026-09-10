@@ -6,6 +6,8 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.6] — 2026-09-10
+
 ### Fixed
 - **The deepest twilight band fanned out to a pole instead of closing into an oval.**
   Reported in [#17] against the wallpaper and the browser demo alike, and worst near
@@ -564,6 +566,7 @@ than the code they were written to fix.
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
+[0.8.6]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.6
 [0.8.5]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.5
 [0.8.4]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.4
 [0.8.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.3
