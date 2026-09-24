@@ -1,0 +1,5 @@
+# setuptools' legacy default sdist rules glob tests/test*.py but not conftest.py, so
+# the sdist shipped the suite without its autouse `isolated_cache` fixture. Anyone
+# running the tests from the sdist — every distro packager's %check — got 3 failures
+# and 5 errors that don't reproduce from a git checkout. Ship the whole tests/ tree.
+recursive-include tests *.py

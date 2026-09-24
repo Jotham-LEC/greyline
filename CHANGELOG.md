@@ -15,6 +15,19 @@ All notable changes to greyline are documented here. The format is based on
   under `/usr/lib/systemd/user` would be silently shadowed by the one in the user's
   home. A release workflow submits the RPM to COPR after the PyPI upload lands.
 
+### Fixed
+- **The sdist shipped a test suite that could not pass.** Anyone building from
+  `greyline-x.y.z.tar.gz` — which is every distro packager, since that is what a spec
+  file fetches — got three failures and five errors from a clean tree. The sdist
+  carried `tests/test_*.py` but not `tests/conftest.py`: setuptools' legacy default
+  rules glob `test*.py` and silently skip `conftest.py`, and there was no `MANIFEST.in`
+  to correct them. The missing file defines the autouse fixture that points
+  `XDG_CACHE_HOME` at a throwaway directory, so without it the cache tests had no
+  fixture to request, and the render tests reused a cached map base across parametrised
+  cases — the July runs were handed January's picture and never re-rendered. None of it
+  reproduced from a git checkout, which is why CI never saw it. The sdist now ships the
+  whole `tests/` tree.
+
 ## [0.8.6] — 2026-09-10
 
 ### Fixed
