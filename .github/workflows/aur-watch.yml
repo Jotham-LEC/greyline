@@ -43,6 +43,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # The label has to exist before `gh issue create --label` will accept it,
+          # and this workflow may fire long after anyone last looked at the repo.
+          # --force makes it idempotent: create it, or leave the existing one alone.
+          gh label create aur \
+            --description "Arch User Repository packaging" \
+            --color "1793d1" --force
+
           # Don't pile up a new issue every Monday.
           existing="$(gh issue list --state open --label aur --json number --jq 'length')"
           if [ "$existing" != "0" ]; then
@@ -53,7 +60,7 @@ jobs:
 
           If registration really is open:
 
-          1. Register the `cothinking` account and add an SSH key.
+          1. Register an AUR account and add an SSH key.
           2. Push `contrib/PKGBUILD` to `ssh://aur@aur.archlinux.org/greyline.git`
              with a generated `.SRCINFO`.
           3. Add the AUR line to the README and `docs/wiki/Installation.md`.
