@@ -11,7 +11,7 @@ The maintainer runs sway on Wayland and cannot test GNOME, KDE or XFCE directly,
 one of them, a report saying the shipped recipe worked is as valuable as one saying it
 did not.
 
-[Open a desktop-compatibility issue](https://github.com/cothink-ing/greyline/issues/new/choose);
+[Open a desktop-compatibility issue](https://github.com/Jotham-LEC/greyline/issues/new/choose);
 there is a template for it. Include the output of `greyline doctor` and
 `greyline --list-outputs`.
 
@@ -60,7 +60,7 @@ costs a rebuild rather than a failure.
 GNOME's empty-then-set, over a background service or a growing pile of workaround state.
 
 When in doubt, a change should make greyline lighter, not heavier. The
-[Road to v1](https://github.com/cothink-ing/greyline/issues/10) tracker applies this
+[Road to v1](https://github.com/Jotham-LEC/greyline/issues/10) tracker applies this
 to specific work.
 
 ## Documentation

@@ -16,6 +16,18 @@ All notable changes to greyline are documented here. The format is based on
   home. A release workflow submits the RPM to COPR after the PyPI upload lands.
 
 ### Fixed
+- **The live-demo link was dead again, for the same reason as last time.** The
+  repository moved from the `cothink-ing` organisation to the `Jotham-LEC` account.
+  GitHub redirects repository and `raw.githubusercontent.com` URLs, so the badges and
+  the README screenshots never stopped working and nothing looked wrong — but Pages is
+  scoped to the owner and does not redirect, so `cothink-ing.github.io/greyline/` had
+  been answering 404. That is the "Try it in your browser" link at the top of the
+  README, and the `Demo` URL published alongside the package on PyPI. This is the
+  second owner change to break the demo this way; the note left in the 0.7.3 entry
+  below did not prevent it. Every URL in the repository now names the current owner,
+  the flake references and the demo page's link back to GitHub included. The one
+  deliberate exception is the 0.7.3 entry itself, which describes the previous rename
+  and would be false if it were rewritten.
 - **The sdist shipped a test suite that could not pass.** Anyone building from
   `greyline-x.y.z.tar.gz` — which is every distro packager, since that is what a spec
   file fetches — got three failures and five errors from a clean tree. The sdist
@@ -273,14 +285,14 @@ than the code they were written to fix.
   declarative or imperative, not both. Installation now also records that
   `services.greyline.fontFamily` is deprecated rather than merely an alias.
 
-[#16]: https://github.com/cothink-ing/greyline/issues/16
-[#17]: https://github.com/cothink-ing/greyline/issues/17
+[#16]: https://github.com/Jotham-LEC/greyline/issues/16
+[#17]: https://github.com/Jotham-LEC/greyline/issues/17
 
 ## [0.7.3] — 2026-09-03
 
 ### Changed
 - **The README is 99 lines instead of 404, and the reference material moved to the
-  [wiki](https://github.com/cothink-ing/greyline/wiki).** The config-key table, the
+  [wiki](https://github.com/Jotham-LEC/greyline/wiki).** The config-key table, the
   theme list and the GNOME/KDE/XFCE recipes were maintained by hand in the README *and*
   generated from the code by `helptext.py`, which is the exact duplication that module
   exists to prevent; the README's copies were already the lossier of the two. The wiki's
@@ -605,26 +617,26 @@ than the code they were written to fix.
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
-[0.8.6]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.6
-[0.8.5]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.5
-[0.8.4]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.4
-[0.8.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.3
-[0.8.2]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.2
-[0.8.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.1
-[0.8.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.0
-[0.7.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.3
-[0.7.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.1
-[0.7.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.0
-[0.6.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.6.0
-[0.5.5]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.5
-[0.5.4]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.4
-[0.5.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.3
-[0.5.2]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.2
-[0.5.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.1
-[0.5.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.0
-[0.4.2]: https://github.com/cothink-ing/greyline/releases/tag/v0.4.2
-[0.4.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.4.1
-[0.4.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.4.0
-[0.3.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.3.0
-[0.2.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.2.0
-[0.1.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.1.0
+[0.8.6]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.6
+[0.8.5]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.5
+[0.8.4]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.4
+[0.8.3]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.3
+[0.8.2]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.2
+[0.8.1]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.1
+[0.8.0]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.0
+[0.7.3]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.7.3
+[0.7.1]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.7.1
+[0.7.0]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.7.0
+[0.6.0]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.6.0
+[0.5.5]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.5.5
+[0.5.4]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.5.4
+[0.5.3]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.5.3
+[0.5.2]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.5.2
+[0.5.1]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.5.1
+[0.5.0]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.5.0
+[0.4.2]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.4.2
+[0.4.1]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.4.1
+[0.4.0]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.4.0
+[0.3.0]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.3.0
+[0.2.0]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.2.0
+[0.1.0]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.1.0

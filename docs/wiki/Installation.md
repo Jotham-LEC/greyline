@@ -28,7 +28,7 @@ It is safe to re-run: an existing config is kept and only the backend keys are u
 
 ```nix
 # flake.nix
-inputs.greyline.url = "github:cothink-ing/greyline";
+inputs.greyline.url = "github:Jotham-LEC/greyline";
 
 # home-manager
 imports = [ inputs.greyline.homeManagerModules.default ];
@@ -94,7 +94,7 @@ loaded and flags it when the file is a managed symlink.
 ## Run it without installing
 
 ```sh
-nix run github:cothink-ing/greyline -- --out wt.png --res 2560x1440
+nix run github:Jotham-LEC/greyline -- --out wt.png --res 2560x1440
 uvx greyline --out wt.png --res 2560x1440
 ```
 
@@ -153,7 +153,7 @@ enable`.
 > macOS backends are written against each platform's documented wallpaper API but have
 > never been run on an actual Windows or Mac desktop, only in CI, which renders the image
 > and exercises the code but cannot see whether the wallpaper changed. Please
-> [open an issue](https://github.com/cothink-ing/greyline/issues) to say whether it
+> [open an issue](https://github.com/Jotham-LEC/greyline/issues) to say whether it
 > works. Success and failure are both useful.
 
 Two known limits: a single combined desktop only, with no per-monitor wallpapers, and no

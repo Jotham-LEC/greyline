@@ -36,12 +36,12 @@ classifiers = [
 greyline = "greyline.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/cothink-ing/greyline"
-Repository = "https://github.com/cothink-ing/greyline"
-Documentation = "https://github.com/cothink-ing/greyline/wiki"
-Issues = "https://github.com/cothink-ing/greyline/issues"
-Changelog = "https://github.com/cothink-ing/greyline/blob/main/CHANGELOG.md"
-Demo = "https://cothink-ing.github.io/greyline/"
+Homepage = "https://github.com/Jotham-LEC/greyline"
+Repository = "https://github.com/Jotham-LEC/greyline"
+Documentation = "https://github.com/Jotham-LEC/greyline/wiki"
+Issues = "https://github.com/Jotham-LEC/greyline/issues"
+Changelog = "https://github.com/Jotham-LEC/greyline/blob/main/CHANGELOG.md"
+Demo = "https://jotham-lec.github.io/greyline/"
 
 [project.optional-dependencies]
 test = ["pytest"]

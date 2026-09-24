@@ -18,7 +18,7 @@ Summary:        A live world-time desktop wallpaper for Wayland and X11
 
 # Matches the PEP 639 SPDX expression in pyproject.toml.
 License:        GPL-2.0-or-later
-URL:            https://github.com/cothink-ing/greyline
+URL:            https://github.com/Jotham-LEC/greyline
 Source:         %{pypi_source greyline}
 
 BuildArch:      noarch
@@ -85,4 +85,4 @@ writes ~/.config/greyline/config.toml and enables the user timer.
 %changelog
 * Thu Sep 24 2026 Jotham Lim Ee Chen <jotham@cothink.ing> - 0.8.6-1
 - Packaged for COPR. Per-release notes live in the project's CHANGELOG.md:
-  https://github.com/cothink-ing/greyline/blob/main/CHANGELOG.md
+  https://github.com/Jotham-LEC/greyline/blob/main/CHANGELOG.md
