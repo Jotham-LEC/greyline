@@ -83,10 +83,6 @@ def available_themes():
     return {**_scan(BUILTIN_DIR), **_scan(user_theme_dir())}
 
 
-def theme_names():
-    return sorted(available_themes())
-
-
 def _parse(path):
     """Parse a theme file, or None — a broken user file must never crash the
     minutely systemd render."""

@@ -24,3 +24,6 @@ web/data/
 # tmp/ path, and nothing in here survives a clean checkout.
 tmp/
 .scratch/
+
+# Personal working notes and scratch files. Never committed.
+DEV_FILES/

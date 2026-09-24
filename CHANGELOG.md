@@ -28,6 +28,15 @@ All notable changes to greyline are documented here. The format is based on
   reproduced from a git checkout, which is why CI never saw it. The sdist now ships the
   whole `tests/` tree.
 
+### Removed
+- **The reference systemd units under `systemd/`.** They had drifted from the units
+  `greyline init` actually writes, and in the one way that matters: they never grew the
+  `ConditionFileIsExecutable` line, so anyone who installed them by hand got exactly
+  the failure that line exists to prevent — an enabled timer firing every minute
+  against a binary that a later uninstall had removed. Nothing in the README, the wiki
+  or `CONTRIBUTING.md` pointed at them. `greyline init --dry-run` prints the units for
+  anyone who still wants to install them by hand.
+
 ## [0.8.6] — 2026-09-10
 
 ### Fixed

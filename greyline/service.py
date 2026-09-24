@@ -1,8 +1,10 @@
 """systemd user timer generation + lifecycle — so `greyline enable` replaces the
 old "git clone the repo to grab the units, install, daemon-reload, enable" dance.
 
-The unit text is generated here (one source of truth); the files under systemd/ in
-the repo remain only as reference for people who prefer to install them by hand.
+The unit text is generated here, and only here. There used to be reference copies
+under systemd/ in the repo; they drifted (they never grew the
+`ConditionFileIsExecutable` line below) and nothing pointed at them, so they went.
+`greyline init --dry-run` prints what would be written for anyone installing by hand.
 """
 
 import os
