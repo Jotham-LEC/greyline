@@ -617,6 +617,7 @@ than the code they were written to fix.
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
+[Unreleased]: https://github.com/Jotham-LEC/greyline/compare/v0.8.6...HEAD
 [0.8.6]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.6
 [0.8.5]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.5
 [0.8.4]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.4

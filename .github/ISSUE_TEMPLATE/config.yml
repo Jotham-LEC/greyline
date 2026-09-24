@@ -1,5 +1,5 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Question / discussion
-    url: https://github.com/Jotham-LEC/greyline/discussions
-    about: Usage questions and general discussion (if Discussions is enabled).
+# Discussions is deliberately off — questions belong in issues, where they are
+# searchable alongside the bugs they often turn out to be. Blank issues are
+# therefore enabled: the two templates below cover bugs and desktop
+# compatibility, and anything else should still have somewhere to go.
+blank_issues_enabled: true
