@@ -37,6 +37,14 @@ All notable changes to greyline are documented here. The format is based on
   or `CONTRIBUTING.md` pointed at them. `greyline init --dry-run` prints the units for
   anyone who still wants to install them by hand.
 
+### Documentation
+- **`LICENSE` is now a verbatim copy of the GPLv2.** It previously opened with a short
+  copyright and lineage notice, and licence scanners — GitHub's included — fail to
+  identify a licence when anything is prepended to it, so the repository was reported
+  as "Other" and was invisible to licence-filtered search. That notice now lives under
+  "Copyright & licence" in `NOTICE`, where the credits and third-party terms already
+  were. No change to the licence itself: greyline is still GPL-2.0-or-later.
+
 ## [0.8.6] — 2026-09-10
 
 ### Fixed
