@@ -1,0 +1,55 @@
+# Maintainer: Jotham Lim Ee Chen <jotham@cothink.ing>
+#
+# AUR registration has been closed for much of 2026, so greyline is not on the AUR yet.
+# Until it is, Arch users can build from this file directly:
+#
+#     curl -O https://raw.githubusercontent.com/cothink-ing/greyline/main/contrib/PKGBUILD
+#     makepkg -si
+#
+# Built from the PyPI sdist, which is the same artifact `pipx install greyline` fetches.
+
+pkgname=greyline
+pkgver=0.8.6
+pkgrel=1
+pkgdesc="A live world-time desktop wallpaper for Wayland and X11, recreating the ThinkPad World Time Active Desktop"
+arch=('any')
+url="https://github.com/cothink-ing/greyline"
+license=('GPL-2.0-or-later')
+depends=('python' 'python-pillow' 'python-tomlkit')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
+checkdepends=('python-pytest')
+optdepends=(
+  'fontconfig: resolve the configured font family via fc-match'
+  'ttf-dejavu: fallback fonts when fontconfig is unavailable'
+  'swaybg: wallpaper backend for Sway and wlroots compositors'
+  'swww: animated wallpaper backend for Wayland'
+  'hyprpaper: wallpaper backend for Hyprland'
+  'feh: wallpaper backend for X11'
+  'xwallpaper: alternative wallpaper backend for X11'
+)
+source=("https://files.pythonhosted.org/packages/source/${pkgname::1}/$pkgname/$pkgname-$pkgver.tar.gz")
+sha256sums=('7db602d276c7591a405ddb12c78856d596655ab9c9225489dd96d3c167d6be13')
+
+build() {
+  cd "$pkgname-$pkgver"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  # test_wiki_docs.py and test_js_port.py self-skip here: tools/ is not in the sdist
+  # and node is not a checkdepend.
+  python -m pytest tests/ -q
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 NOTICE  "$pkgdir/usr/share/licenses/$pkgname/NOTICE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+
+  # No systemd units are installed: greyline/service.py writes them into
+  # ~/.config/systemd/user at `greyline init` time and resolves ExecStart via
+  # shutil.which("greyline"), which finds /usr/bin/greyline correctly.
+}

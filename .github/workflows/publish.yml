@@ -42,3 +42,48 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
+
+  # Submits the RPM to COPR (cothinking/greyline) once the sdist is actually on PyPI.
+  # Ordered `needs: publish` deliberately: contrib/greyline.spec builds from the PyPI
+  # sdist via %pypi_source, so a COPR webhook firing on the git push would race the
+  # upload. Requires one repo secret, COPR_CONFIG, holding the whole ~/.config/copr
+  # file generated at https://copr.fedorainfracloud.org/api/ (it expires — a silently
+  # expired token is the likely first failure here).
+  copr:
+    needs: publish
+    runs-on: ubuntu-latest
+    container: fedora:43
+    steps:
+      - name: Install build tooling
+        run: dnf -y install rpm-build rpmdevtools pyproject-rpm-macros copr-cli git
+      - uses: actions/checkout@v7
+      # Same guard as the tag check above, one level down: the spec carries its own
+      # Version:, so this is the place it can drift from pyproject.toml.
+      - name: Check spec version matches pyproject version
+        run: |
+          spec="$(grep -m1 '^Version:' contrib/greyline.spec | awk '{print $2}')"
+          ver="$(grep -m1 '^version = ' pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')"
+          echo "spec: $spec   pyproject: $ver"
+          [ "$spec" = "$ver" ] || { echo "::error::spec version ($spec) != pyproject version ($ver)"; exit 1; }
+      - name: Build the SRPM
+        run: |
+          rpmdev-setuptree
+          cp contrib/greyline.spec ~/rpmbuild/SPECS/
+          # PyPI's CDN can lag the publish job by a few seconds; retry before failing.
+          for attempt in 1 2 3 4 5; do
+            if spectool -g -R ~/rpmbuild/SPECS/greyline.spec; then break; fi
+            echo "sdist not on PyPI yet (attempt $attempt); retrying in 30s"
+            sleep 30
+          done
+          rpmbuild -bs ~/rpmbuild/SPECS/greyline.spec
+      - name: Submit to COPR
+        env:
+          COPR_CONFIG: ${{ secrets.COPR_CONFIG }}
+        run: |
+          if [ -z "$COPR_CONFIG" ]; then
+            echo "::error::COPR_CONFIG secret is not set"; exit 1
+          fi
+          install -d -m 700 ~/.config
+          printf '%s' "$COPR_CONFIG" > ~/.config/copr
+          chmod 600 ~/.config/copr
+          copr-cli build cothinking/greyline ~/rpmbuild/SRPMS/*.src.rpm

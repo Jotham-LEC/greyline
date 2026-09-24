@@ -6,6 +6,15 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+- **Distribution packaging: an RPM spec and a PKGBUILD.** `contrib/greyline.spec`
+  builds for Fedora COPR and `contrib/PKGBUILD` lets Arch users build with `makepkg`
+  while AUR registration stays closed. Both build from the PyPI sdist — the same
+  artifact `pipx install greyline` fetches — and both deliberately install no systemd
+  units, because the units are generated at `greyline init` time and a packaged copy
+  under `/usr/lib/systemd/user` would be silently shadowed by the one in the user's
+  home. A release workflow submits the RPM to COPR after the PyPI upload lands.
+
 ## [0.8.6] — 2026-09-10
 
 ### Fixed

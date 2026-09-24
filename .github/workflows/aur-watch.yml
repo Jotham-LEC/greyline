@@ -1,0 +1,68 @@
+# AUR account registration has been closed for much of 2026 (shut in June after a wave
+# of malicious packages, briefly reopened 13 July with hardened signup, shut again after
+# a second attack). greyline can't be uploaded until it reopens, and nobody wants to
+# remember to check. This does it weekly and opens an issue when the page changes.
+name: Watch for AUR registration reopening
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"   # Mondays, 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe the AUR registration page
+        id: probe
+        run: |
+          body="$(curl -sS --max-time 30 https://aur.archlinux.org/register || true)"
+          if [ -z "$body" ]; then
+            echo "could not reach the AUR; treating as inconclusive and exiting cleanly"
+            echo "open=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # While closed, the page says registration is disabled rather than rendering
+          # the signup form. Look for the form field instead of matching on prose.
+          if grep -qi 'disabled\|not currently accepting\|registration is closed' <<<"$body"; then
+            echo "still closed"
+            echo "open=false" >> "$GITHUB_OUTPUT"
+          elif grep -q 'name="U"' <<<"$body"; then
+            echo "signup form is present — registration looks open"
+            echo "open=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "page shape changed; flagging for a human look"
+            echo "open=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open an issue if it looks open
+        if: steps.probe.outputs.open == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Don't pile up a new issue every Monday.
+          existing="$(gh issue list --state open --label aur --json number --jq 'length')"
+          if [ "$existing" != "0" ]; then
+            echo "an open AUR issue already exists; nothing to do"; exit 0
+          fi
+          cat > /tmp/body.md <<'EOF'
+          The weekly probe of https://aur.archlinux.org/register no longer looks closed.
+
+          If registration really is open:
+
+          1. Register the `cothinking` account and add an SSH key.
+          2. Push `contrib/PKGBUILD` to `ssh://aur@aur.archlinux.org/greyline.git`
+             with a generated `.SRCINFO`.
+          3. Add the AUR line to the README and `docs/wiki/Installation.md`.
+
+          Opened automatically by `.github/workflows/aur-watch.yml`; close it if this
+          was a false positive.
+          EOF
+          sed -i 's/^          //' /tmp/body.md
+          gh issue create \
+            --title "AUR registration may have reopened — upload greyline" \
+            --label aur \
+            --body-file /tmp/body.md
