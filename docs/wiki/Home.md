@@ -10,8 +10,8 @@ actually have installed.
 
 ## Setting it up
 
-- **[Installation](Installation)** — pipx, uv, Nix and home-manager, Windows and macOS,
-  fonts, scheduling without systemd.
+- **[Installation](Installation)** — pipx, uv, Fedora, Arch, Nix and home-manager,
+  Windows and macOS, fonts, scheduling without systemd.
 - **[Desktop environments](Desktop-environments)** — GNOME, KDE and XFCE.
 - **[Backends](Backends)** — how the PNG reaches your desktop, and how one gets picked.
 

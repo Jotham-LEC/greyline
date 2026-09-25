@@ -1,7 +1,7 @@
 # Installation
 
-greyline is distro-agnostic. Install it with pipx or uv on any distribution, or with the
-Nix flake on NixOS.
+greyline is distro-agnostic. Install it with pipx or uv on any distribution, from the
+COPR repository on Fedora, with the PKGBUILD on Arch, or with the Nix flake on NixOS.
 
 **Requirements:** Linux on Wayland or X11, x86_64 or aarch64. Python 3.11 or newer when
 installing from PyPI (the Nix package bundles its own). Pillow and tomlkit are pulled in
@@ -23,6 +23,34 @@ command for you. No git clone, no hand-copied units.
 
 It is safe to re-run: an existing config is kept and only the backend keys are updated.
 `greyline init --dry-run` shows what it would do and changes nothing.
+
+## Fedora (COPR)
+
+```sh
+sudo dnf copr enable cothinking/greyline
+sudo dnf install greyline
+greyline init
+```
+
+Built for Fedora 43 and later, x86_64 and aarch64. Run `greyline init` as yourself, not
+with sudo: the package installs no systemd units, because `init` writes them into your
+home directory. No wallpaper tool is pulled in as a hard dependency; install the one for
+your desktop (`swaybg`, `swww`, `hyprpaper`, `feh` or `xwallpaper`) unless your desktop
+environment already ships one.
+
+## Arch
+
+greyline is not on the AUR yet. Until it is, build it from the PKGBUILD in the
+repository:
+
+```sh
+curl -O https://raw.githubusercontent.com/Jotham-LEC/greyline/main/contrib/PKGBUILD
+makepkg -si
+greyline init
+```
+
+The wallpaper tools are listed as optional dependencies, so pacman will offer them but
+not install them.
 
 ## Nix, with home-manager
 
@@ -121,15 +149,16 @@ Disable before you uninstall:
 ```sh
 greyline disable            # stops the timer and removes the units init wrote
 greyline disable --purge    # also deletes ~/.config/greyline and the render cache
-pipx uninstall greyline
+pipx uninstall greyline      # or: sudo dnf remove greyline / sudo pacman -R greyline
 ```
 
 The order matters only because `greyline disable` needs greyline to still be installed.
 Your package manager cannot do this step for you: the timer, the unit files and your
 config were written into your home directory by `greyline init` *after* installation,
-and pipx has no post-uninstall hook. If you uninstall without disabling, nothing breaks
-— the service unit carries `ConditionFileIsExecutable`, so systemd skips the orphaned
-timer instead of failing it every minute — but the files stay until you remove them.
+and neither pipx nor a system package manager reaches into it on uninstall. If you
+uninstall without disabling, nothing breaks — the service unit carries
+`ConditionFileIsExecutable`, so systemd skips the orphaned timer instead of failing it
+every minute — but the files stay until you remove them.
 
 Under home-manager, drop `services.greyline` from your configuration and rebuild
 instead; it owns the units and the config file and will remove both.

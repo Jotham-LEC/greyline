@@ -40,6 +40,8 @@ To remove it, `greyline disable` first (that stops the timer and removes the uni
 You need Linux on Wayland or X11, Python 3.11 or newer, and a wallpaper tool for your
 desktop: `swaybg`, `swww`, `hyprpaper`, `feh` or `xwallpaper`, or the one your desktop
 environment already ships. The wiki covers
+[Fedora (COPR)](https://github.com/Jotham-LEC/greyline/wiki/Installation#fedora-copr),
+[Arch](https://github.com/Jotham-LEC/greyline/wiki/Installation#arch),
 [Nix and home-manager](https://github.com/Jotham-LEC/greyline/wiki/Installation#nix-with-home-manager)
 and the beta
 [Windows and macOS](https://github.com/Jotham-LEC/greyline/wiki/Installation#windows-and-macos)

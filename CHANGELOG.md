@@ -6,6 +6,13 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+### Documentation
+- **Install instructions for Fedora and Arch.** greyline 0.8.7 is built in the
+  [`cothinking/greyline`](https://copr.fedorainfracloud.org/coprs/cothinking/greyline/)
+  COPR repository for Fedora 43 and later on x86_64 and aarch64, and the wiki's
+  Installation page now covers `dnf copr enable` alongside building from
+  `contrib/PKGBUILD` on Arch.
+
 ## [0.8.7] — 2026-09-25
 
 ### Added
