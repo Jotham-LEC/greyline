@@ -54,8 +54,8 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-# reference/ is one-off calibration scratch; dist/ is build output; web/ is the JS demo port.
-extend-exclude = ["reference", "dist", "web"]
+# dist/ is build output; web/ is the JS demo port.
+extend-exclude = ["dist", "web"]
 
 [tool.ruff.lint]
 select = [

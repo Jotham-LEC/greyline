@@ -7,7 +7,7 @@ the map's native 1400x1050 reference frame:
     x = AX*lon + BX*lat + CX
     y = AY*lon + BY*lat + CY
 
-The coefficients were least-squares fit (reference/calibrate.py) from the 10 cities
+The coefficients were least-squares fit from the 10 cities
 in the original worldtime.cities.js, each pairing a real lon/lat with the author's
 OffsetX/OffsetY. RMS residual ~17 px over 1400; the near-zero cross terms (BX, AY)
 confirm the projection is equirectangular with negligible rotation/shear.
