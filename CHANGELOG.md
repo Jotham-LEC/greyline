@@ -6,6 +6,8 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.8] — 2026-09-25
+
 ### Fixed
 - **Every build warned that the themes, map data and logo might be dropped.** The
   `themes/`, `geodata/` and `assets/` directories are importable as namespace packages,
@@ -21,6 +23,8 @@ All notable changes to greyline are documented here. The format is based on
   COPR repository for Fedora 43 and later on x86_64 and aarch64, and the wiki's
   Installation page now covers `dnf copr enable` alongside building from
   `contrib/PKGBUILD` on Arch.
+- **A shorter README tagline**, which is also the opening of the PyPI project page: what
+  greyline recreates comes first, and how it runs follows on the next line.
 
 ## [0.8.7] — 2026-09-25
 
@@ -635,7 +639,8 @@ than the code they were written to fix.
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
-[Unreleased]: https://github.com/Jotham-LEC/greyline/compare/v0.8.7...HEAD
+[Unreleased]: https://github.com/Jotham-LEC/greyline/compare/v0.8.8...HEAD
+[0.8.8]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.8
 [0.8.7]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.7
 [0.8.6]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.6
 [0.8.5]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.5

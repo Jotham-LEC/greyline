@@ -12,7 +12,7 @@
 # .github/workflows/publish.yml.
 
 Name:           greyline
-Version:        0.8.7
+Version:        0.8.8
 Release:        1%{?dist}
 Summary:        A live world-time desktop wallpaper for Wayland and X11
 
@@ -83,6 +83,9 @@ writes ~/.config/greyline/config.toml and enables the user timer.
 %{_bindir}/greyline
 
 %changelog
+* Fri Sep 25 2026 Jotham Lim Ee Chen <jotham@cothink.ing> - 0.8.8-1
+- Update to 0.8.8
+
 * Fri Sep 25 2026 Jotham Lim Ee Chen <jotham@cothink.ing> - 0.8.7-1
 - Update to 0.8.7: the sdist now ships tests/conftest.py, so %%check passes.
 
