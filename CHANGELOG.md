@@ -6,6 +6,13 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+### Documentation
+- **The README now says how greyline is built.** A new "How this was built" section
+  states that most of the code and prose is drafted with Claude Code, that those commits
+  carry a `Co-Authored-By: Claude` trailer, and what the maintainer and the test suite
+  are each responsible for. It was already visible in the history; it should have been
+  on the front page.
+
 ## [0.8.8] — 2026-09-25
 
 ### Fixed

@@ -86,6 +86,17 @@ backends are platform-specific, which is why the same renderer runs in the brows
 The diagram is in
 [Architecture](https://github.com/Jotham-LEC/greyline/wiki/Architecture).
 
+## How this was built
+
+greyline is written with AI assistance. Most of the code and much of the prose, this
+README included, were drafted with Claude Code (Anthropic's coding assistant), and
+those commits carry a `Co-Authored-By: Claude` trailer, so you can see which ones in
+`git log`. The maintainer decides what gets built, runs it daily, and is accountable for
+what ships. The test suite, which runs on every push, checks the solar geometry against
+known values and checks that the browser demo's JavaScript port agrees with the Python.
+If something looks wrong, [open an issue](https://github.com/Jotham-LEC/greyline/issues):
+the 0.8.6 twilight fix started as a user's report.
+
 ## Contributing
 
 Bug reports, desktop-compatibility recipes and pull requests are all welcome. The
