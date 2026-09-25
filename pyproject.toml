@@ -83,8 +83,19 @@ warn_unreachable = true
 no_implicit_optional = true
 
 [tool.setuptools]
-packages = ["greyline", "greyline.backends"]
+# The data directories are listed as packages because Python can import them as namespace
+# packages; setuptools warns that it may stop shipping files from any that go unlisted.
+packages = [
+    "greyline",
+    "greyline.assets",
+    "greyline.backends",
+    "greyline.geodata",
+    "greyline.themes",
+]
 
 [tool.setuptools.package-data]
-# Explicit list (not assets/*.png) so locally-present IBM/Lenovo artwork is never packaged.
-greyline = ["assets/tux.png", "default-config.toml", "geodata/*.geojson", "themes/*.toml"]
+greyline = ["default-config.toml"]
+# Explicit list (not *.png) so locally-present IBM/Lenovo artwork is never packaged.
+"greyline.assets" = ["tux.png"]
+"greyline.geodata" = ["*.geojson"]
+"greyline.themes" = ["*.toml"]

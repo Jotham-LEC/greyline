@@ -6,6 +6,15 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+### Fixed
+- **Every build warned that the themes, map data and logo might be dropped.** The
+  `themes/`, `geodata/` and `assets/` directories are importable as namespace packages,
+  and setuptools warns that it may stop shipping data from any such directory that isn't
+  declared a package. They weren't declared, so each build printed six "Package would be
+  ignored" warnings. Nothing was actually missing yet: all 35 themes still installed. The
+  three directories are now declared, and each carries its own data patterns. The wheel
+  and sdist contents are unchanged file for file.
+
 ### Documentation
 - **Install instructions for Fedora and Arch.** greyline 0.8.7 is built in the
   [`cothinking/greyline`](https://copr.fedorainfracloud.org/coprs/cothinking/greyline/)
