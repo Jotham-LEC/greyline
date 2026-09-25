@@ -8,7 +8,7 @@
 
 <sub>Shown with the ThinkPad wordmark, which you supply yourself. The bundled logo is Tux.</sub>
 
-> A recreation of the IBM/ThinkPad World Time Active Desktop -- A live world-time desktop wallpaper with clocks for your cities, with day/night terminator.
+> A recreation of the IBM/ThinkPad World Time Active Desktop — a live world-time desktop wallpaper with clocks for your cities and a day/night terminator.
 > A simple systemd user timer runs greyline once a minute: it renders a PNG per output, hands it to the wallpaper tool you already use, and exits.
 
 [**Try it in your browser**](https://jotham-lec.github.io/greyline/) ·
