@@ -8,9 +8,8 @@
 
 <sub>Shown with the ThinkPad wordmark, which you supply yourself. The bundled logo is Tux.</sub>
 
-> A live world-time desktop wallpaper for Wayland and X11: a world map with clocks for
-> your cities, your home city marked, and a day/night terminator that tracks the sun.
-> A recreation of the IBM/ThinkPad **World Time** Active Desktop.
+> A recreation of the IBM/ThinkPad World Time Active Desktop -- A live world-time desktop wallpaper with clocks for your cities, with day/night terminator.
+> A simple systemd user timer runs greyline once a minute: it renders a PNG per output, hands it to the wallpaper tool you already use, and exits.
 
 [**Try it in your browser**](https://jotham-lec.github.io/greyline/) ·
 [**Documentation**](https://github.com/Jotham-LEC/greyline/wiki) ·
