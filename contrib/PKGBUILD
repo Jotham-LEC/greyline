@@ -9,7 +9,7 @@
 # Built from the PyPI sdist, which is the same artifact `pipx install greyline` fetches.
 
 pkgname=greyline
-pkgver=0.8.6
+pkgver=0.8.7
 pkgrel=1
 pkgdesc="A live world-time desktop wallpaper for Wayland and X11, recreating the ThinkPad World Time Active Desktop"
 arch=('any')
@@ -28,7 +28,7 @@ optdepends=(
   'xwallpaper: alternative wallpaper backend for X11'
 )
 source=("https://files.pythonhosted.org/packages/source/${pkgname::1}/$pkgname/$pkgname-$pkgver.tar.gz")
-sha256sums=('7db602d276c7591a405ddb12c78856d596655ab9c9225489dd96d3c167d6be13')
+sha256sums=('da7da47a166e8625f8e5eee1dfb00f74f871aa9982da5ed95500154999e7d551')
 
 build() {
   cd "$pkgname-$pkgver"
