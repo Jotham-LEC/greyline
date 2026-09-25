@@ -6,6 +6,8 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.7] — 2026-09-25
+
 ### Added
 - **Distribution packaging: an RPM spec and a PKGBUILD.** `contrib/greyline.spec`
   builds for Fedora COPR and `contrib/PKGBUILD` lets Arch users build with `makepkg`
@@ -617,7 +619,8 @@ than the code they were written to fix.
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
-[Unreleased]: https://github.com/Jotham-LEC/greyline/compare/v0.8.6...HEAD
+[Unreleased]: https://github.com/Jotham-LEC/greyline/compare/v0.8.7...HEAD
+[0.8.7]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.7
 [0.8.6]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.6
 [0.8.5]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.5
 [0.8.4]: https://github.com/Jotham-LEC/greyline/releases/tag/v0.8.4
