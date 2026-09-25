@@ -48,7 +48,7 @@ jobs:
   # sdist via %pypi_source, so a COPR webhook firing on the git push would race the
   # upload. Requires one repo secret, COPR_CONFIG, holding the whole ~/.config/copr
   # file generated at https://copr.fedorainfracloud.org/api/ (it expires — a silently
-  # expired token is the likely first failure here).
+  # expired token is the likely first failure here; the current one expires 2027-03-24).
   copr:
     needs: publish
     runs-on: ubuntu-latest
@@ -69,12 +69,18 @@ jobs:
         run: |
           rpmdev-setuptree
           cp contrib/greyline.spec ~/rpmbuild/SPECS/
-          # PyPI's CDN can lag the publish job by a few seconds; retry before failing.
-          for attempt in 1 2 3 4 5; do
-            if spectool -g -R ~/rpmbuild/SPECS/greyline.spec; then break; fi
-            echo "sdist not on PyPI yet (attempt $attempt); retrying in 30s"
+          # %pypi_source uses PyPI's legacy /packages/source/ redirect, which can lag the
+          # upload by minutes, well past the old 5 x 30s retry. spectool exits 0
+          # even on a 404, so test for the tarball itself rather than its exit status.
+          ver="$(grep -m1 '^Version:' contrib/greyline.spec | awk '{print $2}')"
+          sdist=~/rpmbuild/SOURCES/greyline-"$ver".tar.gz
+          for attempt in $(seq 1 20); do
+            spectool -g -R ~/rpmbuild/SPECS/greyline.spec || true
+            [ -s "$sdist" ] && break
+            echo "sdist not on PyPI yet (attempt $attempt/20); retrying in 30s"
             sleep 30
           done
+          [ -s "$sdist" ] || { echo "::error::$sdist never became downloadable"; exit 1; }
           rpmbuild -bs ~/rpmbuild/SPECS/greyline.spec
       - name: Submit to COPR
         env:
