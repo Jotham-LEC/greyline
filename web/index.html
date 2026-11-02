@@ -16,29 +16,50 @@
   .panel { position: fixed; z-index: 2; background: rgba(10,13,20,.72);
     border: 1px solid rgba(255,255,255,.10); border-radius: 12px;
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-  #top { top: 16px; left: 16px; padding: 10px 13px; max-width: min(78vw, 330px); }
-  #top h1 { margin: 0 0 2px; font-size: 15px; font-weight: 650; letter-spacing: .01em; }
-  #top p { margin: 0; font-size: 12px; line-height: 1.4; color: #aab2c4; }
-  #top code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 5px;
+  #side { top: 16px; left: 16px; width: min(calc(100vw - 32px), 320px); max-height: calc(100% - 32px);
+    display: flex; flex-direction: column; padding: 10px 13px; }
+  #side-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  #side h1 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: .01em; }
+  #side-body { overflow-y: auto; margin-top: 8px; display: flex; flex-direction: column; gap: 12px; }
+  #side-body[hidden] { display: none; }
+  #side p { margin: 0; font-size: 12px; line-height: 1.4; color: #aab2c4; }
+  #side code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 5px;
     font-size: 12px; color: #e8ecf4; }
-  #top a { color: #7fb0ff; text-decoration: none; }
-  #top a:hover { text-decoration: underline; }
-  #controls { bottom: 16px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; padding: 8px; }
-  .grp { display: flex; gap: 4px; padding: 0 6px; border-right: 1px solid rgba(255,255,255,.08); }
-  .grp:last-child { border-right: 0; }
+  #side a { color: #7fb0ff; text-decoration: none; }
+  #side a:hover { text-decoration: underline; }
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .row > label > span { display: inline-block; }
+  .row > span, .row > label > span { font-size: 12px; color: #8b93a5; min-width: 78px; }
+  .row input[type=range] { flex: 1; min-width: 80px; accent-color: #7fb0ff; }
+  .row output { font-size: 12px; color: #cfd5e2; min-width: 28px; text-align: right; }
+  .row label { font-size: 12px; color: #aab2c4; }
+  .seg { display: flex; gap: 4px; flex-wrap: wrap; }
   button { font: inherit; font-size: 12.5px; color: #cfd5e2; cursor: pointer;
     background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 5px 10px; }
   button:hover, select:hover { background: rgba(255,255,255,.06); }
   select { font: inherit; font-size: 12.5px; color: #cfd5e2; cursor: pointer;
     background: transparent; border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
-    padding: 5px 8px; max-width: 46vw; }
+    padding: 5px 8px; min-width: 0; flex: 1; }
   select option { background: #12151c; }
+  #cities ul { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; }
+  #cities li { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  #cities li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #cities li select { flex: 0 0 auto; padding: 2px 6px; }
+  #city-form { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  #city-form input { font: inherit; font-size: 12.5px; color: #cfd5e2; min-width: 0;
+    background: transparent; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 5px 8px; }
+  #city-form input[name=name], #city-form select { grid-column: 1 / -1; }
+  #cities summary, #config summary { cursor: pointer; font-size: 12.5px; font-weight: 650; color: #cfd5e2; }
+  #config pre { margin: 8px 0; max-height: 40vh; overflow: auto; padding: 8px 10px;
+    font-size: 12px; line-height: 1.5; color: #e8ecf4; background: rgba(255,255,255,.06);
+    border-radius: 8px; }
+  #config p { margin-top: 6px; }
+  #config button, #toggle { border-color: rgba(255,255,255,.15); }
   button.on { background: rgba(127,176,255,.20); border-color: rgba(127,176,255,.45); color: #eaf1ff; }
-  button:focus-visible, select:focus-visible { outline: 2px solid #7fb0ff; outline-offset: 2px; }
-  @media (max-width: 560px) { #top { max-width: 90vw; } .grp { border-right: 0; }
+  button:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid #7fb0ff; outline-offset: 2px; }
+  @media (max-width: 560px) {
     /* iOS Safari zooms the page when a control under 16px takes focus. */
-    button, select { font-size: 16px; padding: 8px 12px; } }
+    button, select, #city-form input { font-size: 16px; padding: 8px 12px; } }
 </style>
 </head>
 <body>
@@ -47,27 +68,81 @@
 <canvas id="wt" role="img" aria-label="World map with day and night; loading."></canvas>
 <div id="loading">loading the world…</div>
 
-<div id="top" class="panel">
-  <h1>greyline <span style="font-weight:400;color:#8b93a5">— live demo</span></h1>
-  <p>A live world-time wallpaper, rendered in your browser — your timezone highlighted.
-     Get it: <code>pipx install greyline</code> ·
-     <a href="https://github.com/Jotham-LEC/greyline">GitHub</a></p>
-</div>
+<aside id="side" class="panel" aria-label="greyline demo">
+  <div id="side-head">
+    <h1>greyline <span style="font-weight:400;color:#8b93a5">— live demo</span></h1>
+    <button id="toggle" type="button" aria-expanded="true" aria-controls="side-body">Hide</button>
+  </div>
+  <div id="side-body">
+    <p>A live world-time wallpaper, rendered in your browser — your timezone highlighted.
+       Get it: <code>pipx install greyline</code> ·
+       <a href="https://github.com/Jotham-LEC/greyline">GitHub</a></p>
 
-<div id="controls" class="panel" role="group" aria-label="Display options">
-  <div class="grp">
-    <!-- Options are filled in by main.js from the generated theme list. -->
-    <select id="theme" aria-label="Colour theme"></select>
+    <div class="row"><span>Theme</span>
+      <!-- Options are filled in by main.js from the generated theme list. -->
+      <select id="theme" aria-label="Colour theme"></select>
+    </div>
+    <div class="row" role="group" aria-label="Clock format"><span>Clock</span>
+      <div class="seg">
+        <button data-set="fmt:24h" data-group="fmt" class="on" aria-pressed="true">24h</button>
+        <button data-set="fmt:12h" data-group="fmt" aria-pressed="false">12h</button>
+      </div>
+    </div>
+    <div class="row" role="group" aria-label="Twilight rendering"><span>Twilight</span>
+      <div class="seg">
+        <button data-set="bands:true" data-group="bands" class="on" aria-pressed="true">bands</button>
+        <button data-set="bands:false" data-group="bands" aria-pressed="false">terminator only</button>
+      </div>
+    </div>
+
+    <div class="row"><label for="home-tz"><span>Home zone</span></label>
+      <select id="home-tz"></select>
+    </div>
+    <div class="row"><label for="column-highlight"><span>Highlight</span></label>
+      <label><input type="checkbox" id="column-highlight" checked> home timezone column</label>
+    </div>
+    <div class="row"><label for="font-scale"><span>Label size</span></label>
+      <input type="range" id="font-scale" min="0.6" max="2" step="0.05" value="1">
+      <output id="font-scale-out"></output>
+    </div>
+    <div class="row"><label for="label-background"><span>Labels</span></label>
+      <label><input type="checkbox" id="label-background" checked> plate behind each clock</label>
+    </div>
+    <div class="row"><label for="label-bg"><span>Plate alpha</span></label>
+      <input type="range" id="label-bg" min="0" max="255" step="5" value="130">
+      <output id="label-bg-out"></output>
+    </div>
+    <div class="row"><label for="night-alpha"><span>Night</span></label>
+      <input type="range" id="night-alpha" min="0" max="120" step="1" value="12">
+      <output id="night-alpha-out"></output>
+    </div>
+
+    <div class="row"><label for="home-color"><span>Home colour</span></label>
+      <input type="color" id="home-color" value="#ffd140" aria-label="Home city colour">
+      <button id="home-color-reset" type="button" hidden>theme default</button>
+    </div>
+
+    <details id="cities">
+      <summary>Cities</summary>
+      <ul id="city-list"></ul>
+      <form id="city-form">
+        <input name="name" placeholder="Name" required aria-label="City name">
+        <input name="lat" type="number" step="any" min="-90" max="90" placeholder="Lat" required aria-label="Latitude">
+        <input name="lon" type="number" step="any" min="-180" max="180" placeholder="Lon" required aria-label="Longitude">
+        <select id="city-tz" name="tz" aria-label="City timezone"></select>
+        <button type="submit">Add</button>
+        <button type="button" id="city-reset">Reset to defaults</button>
+      </form>
+    </details>
+
+    <details id="config">
+      <summary>Config for this view</summary>
+      <p>Put this in <code>~/.config/greyline/config.toml</code> to get the same wallpaper.</p>
+      <pre id="config-text" aria-live="polite"></pre>
+      <button id="copy" type="button">Copy</button>
+    </details>
   </div>
-  <div class="grp" role="group" aria-label="Clock format">
-    <button data-set="fmt:24h" data-group="fmt" class="on" aria-pressed="true">24h</button>
-    <button data-set="fmt:12h" data-group="fmt" aria-pressed="false">12h</button>
-  </div>
-  <div class="grp" role="group" aria-label="Twilight rendering">
-    <button data-set="bands:true" data-group="bands" class="on" aria-pressed="true">twilight bands</button>
-    <button data-set="bands:false" data-group="bands" aria-pressed="false">terminator only</button>
-  </div>
-</div>
+</aside>
 
 <script type="module" src="./main.js"></script>
 </body>

@@ -7,6 +7,11 @@ All notable changes to greyline are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **The live demo shows the config that recreates what you see.** The controls now sit in
+  one collapsible side panel and cover most config options (home timezone and colour,
+  label size and plate, night darkness, an editable city list). A "Config for this view"
+  section prints the matching `config.toml`, with a Copy button; options a browser cannot
+  show are included as commented lines.
 - **Qogir palettes.** `qogir-dark` and `qogir-light`, taken from the colours of the Qogir
   GTK theme (blue accent, green UTC+0 column, red date line). 37 bundled themes now.
 

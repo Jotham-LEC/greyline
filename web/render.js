@@ -111,8 +111,9 @@ function placeLabels(items, obstacles, bounds, scale) {
 
 export function drawClocks(ctx, w, h, opts) {
   const { date, theme, fmt, cities, scale, proj, labelBgAlpha, obstacles, isHome } = opts;
-  const fs = Math.max(8, Math.round(16 * scale));
-  const fsHome = Math.max(10, Math.round(20 * scale));
+  const fontScale = opts.fontScale ?? 1;  // config font_scale: text and its plate, not the dots
+  const fs = Math.max(8, Math.round(16 * scale * fontScale));
+  const fsHome = Math.max(10, Math.round(20 * scale * fontScale));
   const font = (bold, px) => `${bold ? "600 " : ""}${px}px system-ui, "Segoe UI", sans-serif`;
 
   const items = [];
@@ -138,8 +139,8 @@ export function drawClocks(ctx, w, h, opts) {
 
   // backplates
   if (labelBgAlpha > 0) {
-    const padX = Math.max(4, Math.round(10 * scale)), padY = Math.max(3, Math.round(7 * scale));
-    const rad = Math.max(3, Math.round(7 * scale));
+    const padX = Math.max(4, Math.round(10 * scale * fontScale)), padY = Math.max(3, Math.round(7 * scale * fontScale));
+    const rad = Math.max(3, Math.round(7 * scale * fontScale));
     // Black on a dark map; light themes carry a label_bg so the plate doesn't
     // fight the dark label text drawn on top of it (render.py does the same).
     const plate = theme.label_bg ?? [0, 0, 0];
